@@ -36,7 +36,7 @@ services:
     depends_on:
       - opensearch
     volumes:
-      - /tmp/application.log:/logs/application.log:ro
+      - /tmp:/logs:ro
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
     networks:
       - os-net
