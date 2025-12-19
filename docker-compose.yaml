@@ -1,0 +1,42 @@
+version: "3.8"
+
+networks:
+  os-net:
+    driver: bridge
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+    ports:
+      - "9200:9200"
+    networks:
+      - os-net
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.12.0
+    container_name: opensearch-dashboards
+    depends_on:
+      - opensearch
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./dashboards:/usr/share/opensearch-dashboards/config
+    environment:
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    networks:
+        - os-net
+
+  fluent-bit:
+    image: fluent/fluent-bit:2.2
+    container_name: fluent-bit
+    depends_on:
+      - opensearch
+    volumes:
+      - /tmp/application.log:/logs/application.log:ro
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    networks:
+      - os-net
