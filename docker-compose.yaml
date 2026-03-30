@@ -15,12 +15,18 @@ services:
       - "9200:9200"
     networks:
       - os-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.12.0
     container_name: opensearch-dashboards
     depends_on:
-      - opensearch
+      opensearch:
+        condition: service_healthy
     ports:
       - "5601:5601"
     volumes:
@@ -28,15 +34,31 @@ services:
     environment:
       - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
     networks:
-        - os-net
+      - os-net
+
+  # Auto-creates index template + index pattern in Dashboards
+  setup:
+    image: curlimages/curl:8.5.0
+    container_name: setup
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    volumes:
+      - ./setup/setup-index-pattern.sh:/setup.sh:ro
+    entrypoint: ["sh", "/setup.sh"]
+    networks:
+      - os-net
+    restart: "no"
 
   fluent-bit:
     image: fluent/fluent-bit:2.2
     container_name: fluent-bit
     depends_on:
-      - opensearch
+      opensearch:
+        condition: service_healthy
     volumes:
       - /tmp:/logs:ro
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
     networks:
       - os-net
