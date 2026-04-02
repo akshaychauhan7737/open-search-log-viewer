@@ -58,6 +58,7 @@ services:
         condition: service_healthy
     volumes:
       - /tmp:/logs:ro
+      - /Users/akshay.chauhan/Desktop/freecharge/axis-los-qe/test-output:/test-logs:ro
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
       - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
     networks:
